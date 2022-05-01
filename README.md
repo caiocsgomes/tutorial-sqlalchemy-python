@@ -107,9 +107,93 @@ Resources: https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
 
 ## Step 3: Understanding the app
 
-- explain db.Column
-- explain db.relationship
-- explain db.Model
-- explain \_\_tablename\_\_
-- explain connectio string
+We can think of SQL Alchemy as a way of describing the database with python constructs.
+So a schema is defined in python and then we can use SQLAlchemy to access and manipulate the database.
 
+### db.Model()
+This is the base class for all models, so we inherit from it in our model classes. It provides a table name 
+and a _query_ attribute attached that we can use to query the database.
+
+For example, as User in the example above, we inherit from db.Model and define a table name.
+Because we inherit from db.Model, we can use the query attribute to query the database.
+
+```python
+user = User.query.all()
+users = User.query.get(1)
+```
+
+Resources: https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.Model
+
+### \_\_tablename\_\_
+This is the name of the table in the database. If not defined, it will be the name of the class.
+
+### db.Column()
+With the help of db.Column() we can define the schema of the database and specify how 
+the class properties should be mapped to the database columns. This is the signature:
+
+```python
+db.Column(name, type, nullable=False, primary_key=False, unique=False, default=None, server_default=None, onupdate=None, autoincrement=False, comment=None)
+```
+Most important parameters are:
+- Name: name of the column in the database
+- Type: type of the column in the database
+- Nullable: whether the column can be null or not
+- Primary Key: whether the column is a primary key or not
+- Unique: whether the column is unique or not
+- Default: default value of the column
+
+So if we have:
+
+```python
+class User(db.Model):
+    id = db.Column("id", db.Integer, primary_key=True)
+    name = db.Column("name", db.String(80), nullable=False)
+```
+We are saying we have a table called users with a column called id of type integer and a column called name of type string and
+these two columns are mapped to our class properties id and name respectively. Another key
+point is that the column name does not have to match the property name. We can have for example:
+
+```python
+class User(db.Model):
+    id = db.Column("user_id", db.Integer, primary_key=True)
+    name = db.Column("user_name", db.String(80), nullable=False)
+```
+
+The user_id column will be mapped to the id property and the user_name column will be mapped to the name property.
+
+Resources: https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column
+
+### db.relationship()
+This is the way to define relationships between tables.
+In our example, we have a User class and an Address class.
+The User class has a relationship with the Address class, so 
+each User has an Address. In our User class we have:
+
+```python
+address = db.relationship("Address", backref="user", uselist=False)
+address_id = db.Column("address_id", db.Integer, db.ForeignKey("addresses.id"))
+```
+
+This is saying that the User class has a relationship with the Address class, 
+so the _address_id_ in the User table is a foreign key to the id column in the Address table.
+The backref parameter is used to define the name of the relationship in the Address class, 
+so in the Address class we can access the User using the user attribute (_address.user_).
+
+
+Resources: https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/#simple-relationships
+### Connection string
+
+Our connection string is:
+```python
+"postgresql://postgres:postgres@localhost:5432/postgres"
+```
+Describing each part in sequence:
+- postgresql: the database type
+- postgres: the username
+- postgres: the password
+- localhost: the hostname
+- 5432: the port
+- postgres: the database name
+
+### Differences between SQLAlchemy and Flask SQLAlchemy
+https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/#road-to-enlightenment
